@@ -2,6 +2,7 @@ import base64
 import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from google import genai
 from google.genai import types
 from pydantic import BaseModel
@@ -29,26 +30,32 @@ class ChatRequest(BaseModel):
 @app.post("/api/chat")
 async def chat_endpoint(request: ChatRequest):
   if not client:
-    return {"reply": "錯誤：未設定 GEMINI_API_KEY。"}
+    return StreamingResponse(
+        iter(["錯誤：未設定 GEMINI_API_KEY。"]), media_type="text/plain"
+    )
 
-  try:
-    contents = []
+  contents = []
+  if request.image:
+    image_bytes = base64.b64decode(request.image)
+    contents.append(
+        types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg")
+    )
 
-    if request.image:
-      image_bytes = base64.b64decode(request.image)
-      contents.append(
-          types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg")
+  prompt_text = (
+      f"Please respond exclusively in {request.language}. {request.message}"
+  )
+  contents.append(prompt_text)
+
+  # 使用 generate_content_stream 啟用串流功能
+  def generate_stream():
+    try:
+      response_stream = client.models.generate_content_stream(
+          model="gemini-3.6-flash", contents=contents
       )
+      for chunk in response_stream:
+        if chunk.text:
+          yield chunk.text
+    except Exception as e:
+      yield f"\n[請求失敗: {str(e)}]"
 
-    prompt_text = (
-        f"Please respond exclusively in {request.language}. "
-        f"{request.message}"
-    )
-    contents.append(prompt_text)
-
-    response = client.models.generate_content(
-        model="gemini-3.6-flash", contents=contents
-    )
-    return {"reply": response.text}
-  except Exception as e:
-    return {"reply": f"請求失敗：{str(e)}"}
+  return StreamingResponse(generate_stream(), media_type="text/plain")
