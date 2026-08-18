@@ -3,142 +3,200 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 對話助手</title>
+    <title>Gemini AI Assistant</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-        .chat-container {
-            width: 400px;
-            height: 600px;
-            background-color: #fff;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-        .chat-header {
-            background-color: #007bff;
-            color: white;
-            padding: 15px;
-            text-align: center;
-            font-weight: bold;
-        }
-        .chat-box {
-            flex: 1;
-            padding: 15px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        .message {
-            max-width: 80%;
-            padding: 10px 14px;
-            border-radius: 15px;
-            font-size: 14px;
-            line-height: 1.4;
-            word-wrap: break-word;
-        }
-        .user-message {
-            align-self: flex-end;
-            background-color: #007bff;
-            color: white;
-        }
-        .ai-message {
-            align-self: flex-start;
-            background-color: #e9ecef;
-            color: #333;
-        }
-        .chat-input {
-            display: flex;
-            padding: 10px;
-            border-top: 1px solid #ddd;
-        }
-        .chat-input input {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            outline: none;
-        }
-        .chat-input button {
-            margin-left: 10px;
-            padding: 10px 15px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .chat-input button:hover {
-            background-color: #0056b3;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #131314; color: #e3e3e3; display: flex; height: 100vh; overflow: hidden; }
+        
+        /* 側邊欄 */
+        .sidebar { width: 260px; background-color: #1e1f20; padding: 20px; display: flex; flex-direction: column; gap: 15px; border-right: 1px solid #2d2f31; }
+        .new-chat-btn { background-color: #1a73e8; color: white; border: none; padding: 12px; border-radius: 20px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .new-chat-btn:hover { background-color: #1557b0; }
+        .history-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+        .history-item { padding: 10px; border-radius: 8px; cursor: pointer; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #c4c7c5; }
+        .history-item:hover { background-color: #2d2f31; }
+
+        /* 主對話區 */
+        .main-chat { flex: 1; display: flex; flex-direction: column; justify-content: space-between; position: relative; }
+        .chat-header { padding: 15px 20px; border-bottom: 1px solid #2d2f31; font-size: 18px; font-weight: bold; color: #e3e3e3; display: flex; justify-content: space-between; align-items: center; }
+        
+        /* 語言選擇下拉選單 */
+        .lang-select { background-color: #2b2c2e; color: #e3e3e3; border: 1px solid #3c4043; padding: 6px 12px; border-radius: 16px; outline: none; font-size: 14px; cursor: pointer; }
+        .lang-select:hover { background-color: #3c4043; }
+
+        .chat-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
+        
+        .message { max-width: 80%; padding: 12px 16px; border-radius: 18px; line-height: 1.5; font-size: 15px; word-break: break-word; }
+        .user-message { align-self: flex-end; background-color: #2b2c2e; color: #e3e3e3; border-bottom-right-radius: 4px; }
+        .ai-message { align-self: flex-start; background-color: transparent; color: #e3e3e3; border-bottom-left-radius: 4px; }
+        .preview-img { max-width: 200px; max-height: 200px; border-radius: 8px; margin-bottom: 8px; display: block; }
+
+        /* 輸入區域 */
+        .input-container { padding: 20px; background-color: #131314; display: flex; flex-direction: column; gap: 10px; align-items: center; }
+        .input-box { width: 100%; max-width: 800px; background-color: #1e1f20; border-radius: 28px; padding: 10px 16px; display: flex; align-items: center; gap: 10px; border: 1px solid #3c4043; }
+        .input-box textarea { flex: 1; background: transparent; border: none; outline: none; color: white; resize: none; height: 24px; font-size: 15px; max-height: 120px; }
+        
+        .btn-icon { background: none; border: none; color: #c4c7c5; cursor: pointer; font-size: 18px; padding: 6px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .btn-icon:hover { background-color: #2d2f31; color: white; }
+        .stop-btn { background-color: #d93025; color: white; border: none; padding: 6px 12px; border-radius: 16px; cursor: pointer; font-size: 13px; display: none; }
+
+        #imagePreviewArea { width: 100%; max-width: 800px; display: flex; gap: 10px; }
+        .thumb-preview { width: 60px; height: 60px; border-radius: 8px; object-fit: cover; position: relative; }
     </style>
 </head>
 <body>
 
-<div class="chat-container">
-    <div class="chat-header">AI 對話助手</div>
-    <div class="chat-box" id="chatBox"></div>
-    <div class="chat-input">
-        <input type="text" id="userInput" placeholder="輸入訊息..." onkeydown="if(event.key==='Enter') sendMessage()">
-        <button onclick="sendMessage()">發送</button>
+    <div class="sidebar">
+        <button class="new-chat-btn" onclick="startNewChat()">+ 新對話</button>
+        <div class="history-list" id="historyList"></div>
     </div>
-</div>
+
+    <div class="main-chat">
+        <div class="chat-header">
+            <span>Gemini AI Assistant</span>
+            <select id="languageSelect" class="lang-select">
+                <option value="Traditional Chinese">繁體中文</option>
+                <option value="English">English</option>
+                <option value="Japanese">日本語</option>
+            </select>
+        </div>
+        <div class="chat-box" id="chatBox"></div>
+
+        <div class="input-container">
+            <div id="imagePreviewArea"></div>
+            <div class="input-box">
+                <label class="btn-icon" title="上傳圖片">
+                    📷 <input type="file" id="imageInput" accept="image/*" style="display: none;" onchange="handleImageSelect(event)">
+                </label>
+                <textarea id="userInput" placeholder="問問 Gemini..." rows="1" onkeydown="handleKeyDown(event)"></textarea>
+                <button class="stop-btn" id="stopBtn" onclick="stopGeneration()">停止生成</button>
+                <button class="btn-icon" id="sendBtn" onclick="sendMessage()">➔</button>
+            </div>
+        </div>
+    </div>
 
 <script>
+let abortController = null;
+let currentBase64Image = null;
+
+window.onload = () => { loadHistory(); };
+
+function handleKeyDown(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+    }
+}
+
+function handleImageSelect(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        currentBase64Image = event.target.result;
+        document.getElementById("imagePreviewArea").innerHTML = `
+            <img src="${currentBase64Image}" class="thumb-preview">
+        `;
+    };
+    reader.readAsDataURL(file);
+}
+
 async function sendMessage() {
-    const inputField = document.getElementById("userInput");
-    const text = inputField.value.trim();
-    if (!text) return;
+    const input = document.getElementById("userInput");
+    const text = input.value.trim();
+    const selectedLang = document.getElementById("languageSelect").value;
+    
+    if (!text && !currentBase64Image) return;
 
     const chatBox = document.getElementById("chatBox");
 
-    // 渲染使用者訊息
-    const userMsg = document.createElement("div");
-    userMsg.className = "message user-message";
-    userMsg.innerText = text;
-    chatBox.appendChild(userMsg);
+    // 渲染 User 訊息
+    const userDiv = document.createElement("div");
+    userDiv.className = "message user-message";
+    if (currentBase64Image) {
+        userDiv.innerHTML += `<img src="${currentBase64Image}" class="preview-img"><br>`;
+    }
+    userDiv.innerHTML += text;
+    chatBox.appendChild(userDiv);
 
-    inputField.value = "";
+    // 清空輸入框與圖片預覽
+    input.value = "";
+    document.getElementById("imagePreviewArea").innerHTML = "";
+    const sendImg = currentBase64Image;
+    currentBase64Image = null;
 
-    // 渲染 AI 載入中訊息
-    const aiMsg = document.createElement("div");
-    aiMsg.className = "message ai-message";
-    aiMsg.innerText = "AI 思考中（若是首次發送，需等候伺服器喚醒）...";
-    chatBox.appendChild(aiMsg);
+    // 渲染 AI 載入訊息
+    const aiDiv = document.createElement("div");
+    aiDiv.className = "message ai-message";
+    aiDiv.innerText = "Gemini 思考中...";
+    chatBox.appendChild(aiDiv);
     chatBox.scrollTop = chatBox.scrollHeight;
 
+    // 控制停止按鈕顯示
+    const stopBtn = document.getElementById("stopBtn");
+    const sendBtn = document.getElementById("sendBtn");
+    stopBtn.style.display = "inline-block";
+    sendBtn.style.display = "none";
+
+    abortController = new AbortController();
+
     try {
-        // 正確帶入 /api/chat 完整路徑
         const response = await fetch("https://ai2-9ewx.onrender.com/api/chat", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ message: text })
+            signal: abortController.signal,
+            body: JSON.stringify({ 
+                message: text,
+                image: sendImg ? sendImg.split(',')[1] : null,
+                language: selectedLang
+            })
         });
 
-        if (!response.ok) {
-            throw new Error(`HTTP 錯誤狀態: ${response.status}`);
-        }
-
         const data = await response.json();
-        aiMsg.innerText = data.reply;
-    } catch (error) {
-        aiMsg.innerText = "連線失敗，請稍後再試。";
-        console.error("Fetch Error:", error);
+        aiDiv.innerText = data.reply;
+        saveToHistory(text || "圖片分析", data.reply);
+    } catch (err) {
+        if (err.name === 'AbortError') {
+            aiDiv.innerText = "[已停止生成]";
+        } else {
+            aiDiv.innerText = "連線失敗，請稍後再試。";
+        }
+    } finally {
+        stopBtn.style.display = "none";
+        sendBtn.style.display = "inline-block";
+        chatBox.scrollTop = chatBox.scrollHeight;
     }
-    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function stopGeneration() {
+    if (abortController) {
+        abortController.abort();
+    }
+}
+
+function startNewChat() {
+    document.getElementById("chatBox").innerHTML = "";
+}
+
+function saveToHistory(prompt, reply) {
+    let history = JSON.parse(localStorage.getItem("chatHistory") || "[]");
+    history.unshift({ prompt, reply });
+    localStorage.setItem("chatHistory", JSON.stringify(history));
+    loadHistory();
+}
+
+function loadHistory() {
+    const historyList = document.getElementById("historyList");
+    let history = JSON.parse(localStorage.getItem("chatHistory") || "[]");
+    historyList.innerHTML = "";
+    history.forEach((item) => {
+        const div = document.createElement("div");
+        div.className = "history-item";
+        div.innerText = item.prompt;
+        historyList.appendChild(div);
+    });
 }
 </script>
-
 </body>
 </html>
