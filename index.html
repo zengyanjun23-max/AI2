@@ -117,7 +117,7 @@
 
             const chatBox = document.getElementById("chat-box");
 
-            // 顯示使用者訊息
+            // 1. 顯示使用者發送的訊息
             const userMsgDiv = document.createElement("div");
             userMsgDiv.className = "message user";
             userMsgDiv.textContent = message;
@@ -126,7 +126,7 @@
             inputField.value = "";
             chatBox.scrollTop = chatBox.scrollHeight;
 
-            // 顯示載入中狀態
+            // 2. 顯示 AI 思考中的暫時訊息
             const aiMsgDiv = document.createElement("div");
             aiMsgDiv.className = "message ai";
             aiMsgDiv.textContent = "思考中...";
@@ -134,8 +134,11 @@
             chatBox.scrollTop = chatBox.scrollHeight;
 
             try {
-                // 發送請求給 Python FastAPI 後端
-                const response = await fetch("http://127.0.0.1:8000/api/chat", {
+                // 【注意】完成第二階段 Render 部署後，請將下方網址替換為你在 Render 取得的後端網址
+                // 例如: https://my-ai-backend.onrender.com/api/chat
+                const backendUrl = "http://127.0.0.1:8000/api/chat";
+
+                const response = await fetch(backendUrl, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ message: message })
@@ -144,7 +147,7 @@
                 const data = await response.json();
                 aiMsgDiv.textContent = data.reply;
             } catch (error) {
-                aiMsgDiv.textContent = "連線失敗，請檢查後端服務是否啟動。";
+                aiMsgDiv.textContent = "連線失敗，請確認後端 API 伺服器是否正常運行。";
             }
             chatBox.scrollTop = chatBox.scrollHeight;
         }
