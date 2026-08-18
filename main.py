@@ -9,6 +9,7 @@ from pydantic import BaseModel
 
 app = FastAPI()
 
+# 設定跨域資源共享 (CORS)，確保前端能正常發送請求
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -21,49 +22,53 @@ api_key = os.environ.get("GEMINI_API_KEY")
 
 
 class ChatRequest(BaseModel):
-  message: str | None = ""
-  image: str | None = None
-  language: str | None = "Traditional Chinese"
+    message: str | None = ""
+    image: str | None = None
+    language: str | None = "Traditional Chinese"
 
 
 @app.get("/")
 async def root():
-  return {"status": "ok"}
+    return {"status": "ok"}
 
 
 @app.post("/api/chat")
 async def chat_endpoint(request: ChatRequest):
-  if not api_key:
-    raise HTTPException(status_code=500, detail="GEMINI_API_KEY not set")
+    if not api_key:
+        raise HTTPException(status_code=500, detail="GEMINI_API_KEY not set")
 
-  client = genai.Client(api_key=api_key)
+    client = genai.Client(api_key=api_key)
 
-  contents = []
-  if request.image:
-    try:
-      image_bytes = base64.b64decode(request.image)
-      contents.append(
-          types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg")
-      )
-    except Exception as e:
-      print(f"Image decode error: {e}")
+    contents = []
+    
+    # 處理圖片傳輸
+    if request.image:
+        try:
+            image_bytes = base64.b64decode(request.image)
+            contents.append(
+                types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg")
+            )
+        except Exception as e:
+            print(f"Image decode error: {e}")
 
-  prompt = (
-      f"Please reply in {request.language}. {request.message}"
-      if request.message
-      else f"Please describe this image in {request.language}."
-  )
-  contents.append(prompt)
+    # 建立提示詞（Prompt）
+    prompt = (
+        f"Please reply in {request.language}. {request.message}"
+        if request.message
+        else f"Please describe this image in {request.language}."
+    )
+    contents.append(prompt)
 
-  def stream_generator():
-    try:
-      response = client.models.generate_content_stream(
-          model="gemini-3.6-flash", contents=contents
-      )
-      for chunk in response:
-        if chunk.text:
-          yield chunk.text
-    except Exception as e:
-      yield f"\n[Generation Error: {str(e)}]"
+    # 以串流（Stream）方式生成回應
+    def stream_generator():
+        try:
+            response = client.models.generate_content_stream(
+                model="gemini-2.5-flash", contents=contents
+            )
+            for chunk in response:
+                if chunk.text:
+                    yield chunk.text
+        except Exception as e:
+            yield f"\n[Generation Error: {str(e)}]"
 
-  return StreamingResponse(stream_generator(), media_type="text/plain")
+    return StreamingResponse(stream_generator(), media_type="text/plain")
