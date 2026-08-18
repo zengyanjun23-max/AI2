@@ -64,7 +64,7 @@ async def chat_endpoint(request: ChatRequest):
         try:
             # 優先使用額度較寬裕且穩定的 1.5-flash 模型，避免頻繁觸發額度限制
             response = client.models.generate_content_stream(
-                model="gemini-1.5-flash", contents=contents
+                model="gemini-3.5-flash", contents=contents
             )
             for chunk in response:
                 if chunk.text:
