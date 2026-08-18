@@ -14,6 +14,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# 在伺服器啟動時即完成 Client 初始化，避免每次 request 重複連線
+api_key = os.environ.get("GEMINI_API_KEY")
+client = genai.Client(api_key=api_key) if api_key else None
+
 
 class ChatRequest(BaseModel):
   message: str
@@ -26,13 +30,10 @@ async def root():
 
 @app.post("/api/chat")
 async def chat_endpoint(request: ChatRequest):
-  api_key = os.environ.get("GEMINI_API_KEY")
-
-  if not api_key:
+  if not client:
     return {"reply": "錯誤：伺服器未設定 GEMINI_API_KEY 環境變數。"}
 
   try:
-    client = genai.Client(api_key=api_key)
     response = client.models.generate_content(
         model="gemini-3.6-flash",
         contents=request.message,
