@@ -64,7 +64,7 @@ async def chat_endpoint(request: ChatRequest):
         try:
             # 使用 gemini-2.5-flash 模型
             response = client.models.generate_content_stream(
-                model="gemini-3.6-flash", contents=contents
+                model="gemini-3.5-flash", contents=contents
             )
             for chunk in response:
                 if chunk.text:
