@@ -1,7 +1,7 @@
 import os
-from google import genai
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from google import genai
 from pydantic import BaseModel
 
 app = FastAPI()
@@ -29,7 +29,7 @@ async def chat_endpoint(request: ChatRequest):
   try:
     client = genai.Client(api_key=api_key)
     response = client.models.generate_content(
-        model="gemini-2.5-flash",
+        model="gemini-3.6-flash",  # 已更換為系統建議的最新模型
         contents=request.message,
     )
     return {"reply": response.text}
