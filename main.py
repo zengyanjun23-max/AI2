@@ -27,26 +27,33 @@ class ChatRequest(BaseModel):
   language: str | None = "Traditional Chinese"
 
 
+@app.get("/")
+async def root():
+  return {"message": "Server is running properly."}
+
+
 @app.post("/api/chat")
 async def chat_endpoint(request: ChatRequest):
   if not client:
     return StreamingResponse(
-        iter(["錯誤：未設定 GEMINI_API_KEY。"]), media_type="text/plain"
+        iter(["錯誤：伺服器未設定 GEMINI_API_KEY。"]), media_type="text/plain"
     )
 
   contents = []
   if request.image:
-    image_bytes = base64.b64decode(request.image)
-    contents.append(
-        types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg")
-    )
+    try:
+      image_bytes = base64.b64decode(request.image)
+      contents.append(
+          types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg")
+      )
+    except Exception as e:
+      print(f"Image parse error: {e}")
 
   prompt_text = (
       f"Please respond exclusively in {request.language}. {request.message}"
   )
   contents.append(prompt_text)
 
-  # 使用 generate_content_stream 啟用串流功能
   def generate_stream():
     try:
       response_stream = client.models.generate_content_stream(
