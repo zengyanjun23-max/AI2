@@ -1,6 +1,6 @@
 import base64
 import os
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from google import genai
@@ -18,26 +18,25 @@ app.add_middleware(
 )
 
 api_key = os.environ.get("GEMINI_API_KEY")
-client = genai.Client(api_key=api_key) if api_key else None
 
 
 class ChatRequest(BaseModel):
-  message: str
+  message: str | None = ""
   image: str | None = None
   language: str | None = "Traditional Chinese"
 
 
 @app.get("/")
 async def root():
-  return {"message": "Server is running properly."}
+  return {"status": "ok"}
 
 
 @app.post("/api/chat")
 async def chat_endpoint(request: ChatRequest):
-  if not client:
-    return StreamingResponse(
-        iter(["錯誤：伺服器未設定 GEMINI_API_KEY。"]), media_type="text/plain"
-    )
+  if not api_key:
+    raise HTTPException(status_code=500, detail="GEMINI_API_KEY not set")
+
+  client = genai.Client(api_key=api_key)
 
   contents = []
   if request.image:
@@ -47,22 +46,24 @@ async def chat_endpoint(request: ChatRequest):
           types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg")
       )
     except Exception as e:
-      print(f"Image parse error: {e}")
+      print(f"Image decode error: {e}")
 
-  prompt_text = (
-      f"Please respond exclusively in {request.language}. {request.message}"
+  prompt = (
+      f"Please reply in {request.language}. {request.message}"
+      if request.message
+      else f"Please describe this image in {request.language}."
   )
-  contents.append(prompt_text)
+  contents.append(prompt)
 
-  def generate_stream():
+  def stream_generator():
     try:
-      response_stream = client.models.generate_content_stream(
+      response = client.models.generate_content_stream(
           model="gemini-3.6-flash", contents=contents
       )
-      for chunk in response_stream:
+      for chunk in response:
         if chunk.text:
           yield chunk.text
     except Exception as e:
-      yield f"\n[請求失敗: {str(e)}]"
+      yield f"\n[Generation Error: {str(e)}]"
 
-  return StreamingResponse(generate_stream(), media_type="text/plain")
+  return StreamingResponse(stream_generator(), media_type="text/plain")
