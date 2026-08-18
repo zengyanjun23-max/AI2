@@ -9,7 +9,6 @@ from pydantic import BaseModel
 
 app = FastAPI()
 
-# 設定跨域資源共享 (CORS)，確保前端能正常發送請求
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -40,8 +39,8 @@ async def chat_endpoint(request: ChatRequest):
     client = genai.Client(api_key=api_key)
 
     contents = []
-    
-    # 處理圖片傳輸
+
+    # 處理 base64 圖片
     if request.image:
         try:
             image_bytes = base64.b64decode(request.image)
@@ -51,7 +50,7 @@ async def chat_endpoint(request: ChatRequest):
         except Exception as e:
             print(f"Image decode error: {e}")
 
-    # 建立提示詞（Prompt）
+    # 組合提示詞
     prompt = (
         f"Please reply in {request.language}. {request.message}"
         if request.message
@@ -59,12 +58,12 @@ async def chat_endpoint(request: ChatRequest):
     )
     contents.append(prompt)
 
-    # 以串流（Stream）方式生成回應
+    # 以串流回傳生成結果 (修正模型名稱為 gemini-3.6-flash)
     def stream_generator():
         try:
             response = client.models.generate_content_stream(
-    model="gemini-3.6-flash", contents=contents
-)
+                model="gemini-3.6-flash", contents=contents
+            )
             for chunk in response:
                 if chunk.text:
                     yield chunk.text
