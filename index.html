@@ -69,7 +69,6 @@
 let abortController = null;
 let currentBase64Image = null;
 
-// 使用 DOMContentLoaded 確保 HTML 元素全部加載完成後才執行腳本
 document.addEventListener("DOMContentLoaded", () => {
     loadHistory();
 });
@@ -126,9 +125,8 @@ async function sendMessage() {
 
     const aiDiv = document.createElement("div");
     aiDiv.className = "message ai-message";
-    aiDiv.innerText = "思考中...";
+    aiDiv.innerText = "";
     chatBox.appendChild(aiDiv);
-    chatBox.scrollTop = chatBox.scrollHeight;
 
     const stopBtn = document.getElementById("stopBtn");
     const sendBtn = document.getElementById("sendBtn");
@@ -151,18 +149,18 @@ async function sendMessage() {
 
         if (!response.ok) throw new Error("Server status: " + response.status);
 
-        const rawText = await response.text();
-        let finalText = rawText;
+        // 使用 ReadableStream 正確解讀 streaming 內容
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder("utf-8");
 
-        try {
-            const jsonObj = JSON.parse(rawText);
-            if (jsonObj.reply) finalText = jsonObj.reply;
-        } catch (e) {
-            // 純文字回應，保持原樣
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            aiDiv.innerText += decoder.decode(value, { stream: true });
+            chatBox.scrollTop = chatBox.scrollHeight;
         }
 
-        aiDiv.innerText = finalText;
-        saveToHistory(text || "圖片分析", finalText);
+        saveToHistory(text || "圖片分析", aiDiv.innerText);
 
     } catch (err) {
         if (err.name === 'AbortError') {
@@ -196,7 +194,7 @@ function saveToHistory(prompt, reply) {
 
 function loadHistory() {
     const historyList = document.getElementById("historyList");
-    if (!historyList) return; // 安全保護：若無此元素則中斷，防止報錯
+    if (!historyList) return;
 
     let history = JSON.parse(localStorage.getItem("chatHistory") || "[]");
     historyList.innerHTML = "";
