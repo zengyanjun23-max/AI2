@@ -64,7 +64,6 @@
             background-color: #e9ecef;
             color: #212529;
             border-bottom-left-radius: 4px;
-            min-width: 60px;
         }
         .input-container {
             display: flex;
@@ -113,21 +112,22 @@
     <script>
         async function sendMessage() {
             const inputField = document.getElementById("user-input");
-            const message = inputField.value.trim();
-            if (!message) return;
+            const text = inputField.value.trim();
+            if (!text) return;
 
             const chatBox = document.getElementById("chat-box");
 
-            // 1. 顯示使用者發送的訊息
+            // 1. 先顯示使用者輸入的真實文字
             const userMsgDiv = document.createElement("div");
             userMsgDiv.className = "message user";
-            userMsgDiv.textContent = message;
+            userMsgDiv.textContent = text;
             chatBox.appendChild(userMsgDiv);
 
+            // 清空輸入框
             inputField.value = "";
             chatBox.scrollTop = chatBox.scrollHeight;
 
-            // 2. 建立 AI 對話框並顯示思考中
+            // 2. 顯示 AI 思考中
             const aiMsgDiv = document.createElement("div");
             aiMsgDiv.className = "message ai";
             aiMsgDiv.textContent = "思考中...";
@@ -135,29 +135,26 @@
             chatBox.scrollTop = chatBox.scrollHeight;
 
             try {
-                // 已設定為你的 Render API 網址
-                const backendUrl = "https://ai2-9ewx.onrender.com/api/chat";
-
-                const response = await fetch(backendUrl, {
+                // 將 text 變數放入 JSON body 中傳給後端
+                const response = await fetch("https://ai2-9ewx.onrender.com/api/chat", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ message: message })
+                    body: JSON.stringify({ message: text })
                 });
 
                 if (!response.ok) {
-                    throw new Error(`HTTP 錯誤碼：${response.status}`);
+                    throw new Error(`HTTP 錯誤：${response.status}`);
                 }
 
                 const data = await response.json();
 
-                // 3. 確保文字正確渲染至畫面上
                 if (data && data.reply) {
                     aiMsgDiv.textContent = data.reply;
                 } else {
-                    aiMsgDiv.textContent = "收到空回應，請確認資料結構。";
+                    aiMsgDiv.textContent = "收到空回應，請檢查資料結構。";
                 }
             } catch (error) {
-                aiMsgDiv.textContent = "連線失敗，可能是伺服器正在喚醒中，請於 30 秒後重試。";
+                aiMsgDiv.textContent = "連線失敗，請稍後再試。";
             }
             chatBox.scrollTop = chatBox.scrollHeight;
         }
