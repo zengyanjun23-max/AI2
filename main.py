@@ -19,6 +19,11 @@ class ChatRequest(BaseModel):
   message: str
 
 
+@app.get("/")
+async def root():
+  return {"message": "Server is running properly."}
+
+
 @app.post("/api/chat")
 async def chat_endpoint(request: ChatRequest):
   api_key = os.environ.get("GEMINI_API_KEY")
@@ -29,7 +34,7 @@ async def chat_endpoint(request: ChatRequest):
   try:
     client = genai.Client(api_key=api_key)
     response = client.models.generate_content(
-        model="gemini-3.6-flash",  # 已更換為系統建議的最新模型
+        model="gemini-3.6-flash",
         contents=request.message,
     )
     return {"reply": response.text}
