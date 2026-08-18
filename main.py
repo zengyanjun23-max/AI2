@@ -40,7 +40,7 @@ async def chat_endpoint(request: ChatRequest):
 
     contents = []
 
-    # 處理 base64 圖片
+    # 處理 Base64 圖片
     if request.image:
         try:
             image_bytes = base64.b64decode(request.image)
@@ -50,7 +50,7 @@ async def chat_endpoint(request: ChatRequest):
         except Exception as e:
             print(f"Image decode error: {e}")
 
-    # 組合提示詞
+    # 建立 Prompt
     prompt = (
         f"Please reply in {request.language}. {request.message}"
         if request.message
@@ -58,7 +58,7 @@ async def chat_endpoint(request: ChatRequest):
     )
     contents.append(prompt)
 
-    # 以串流回傳生成結果 (修正模型名稱為 gemini-3.6-flash)
+    # 採用串流輸出並綁定 gemini-3.6-flash 模型
     def stream_generator():
         try:
             response = client.models.generate_content_stream(
