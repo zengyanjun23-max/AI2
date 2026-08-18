@@ -63,8 +63,8 @@ async def chat_endpoint(request: ChatRequest):
     def stream_generator():
         try:
             response = client.models.generate_content_stream(
-                model="gemini-2.5-flash", contents=contents
-            )
+    model="gemini-3.6-flash", contents=contents
+)
             for chunk in response:
                 if chunk.text:
                     yield chunk.text
