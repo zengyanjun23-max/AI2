@@ -1,7 +1,7 @@
 import os
+from google import genai
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from groq import Groq
 from pydantic import BaseModel
 
 app = FastAPI()
@@ -21,25 +21,17 @@ class ChatRequest(BaseModel):
 
 @app.post("/api/chat")
 async def chat_endpoint(request: ChatRequest):
-  api_key = os.environ.get("GROQ_API_KEY")
+  api_key = os.environ.get("GEMINI_API_KEY")
 
   if not api_key:
-    return {"reply": "錯誤：伺服器未設定 GROQ_API_KEY 環境變數。"}
+    return {"reply": "錯誤：伺服器未設定 GEMINI_API_KEY 環境變數。"}
 
   try:
-    client = Groq(api_key=api_key)
-    completion = client.chat.completions.create(
-        model="llama3-70b-8192",  # 改用這個最穩定的模型名稱
-        messages=[
-            {
-                "role": "system",
-                "content": "你是一個親切且樂於助人的 AI 繁體中文對話助手。",
-            },
-            {"role": "user", "content": request.message},
-        ],
-        temperature=0.7,
+    client = genai.Client(api_key=api_key)
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=request.message,
     )
-    ai_reply = completion.choices[0].message.content
-    return {"reply": ai_reply}
+    return {"reply": response.text}
   except Exception as e:
-    return {"reply": f"呼叫 Groq API 失敗：{str(e)}"}
+    return {"reply": f"呼叫 Gemini API 失敗：{str(e)}"}
