@@ -9,7 +9,7 @@ from pydantic import BaseModel
 
 app = FastAPI()
 
-# 跨域資源共享設定，確保前端可存取 API
+# 設定跨域資源共享 (CORS)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -41,7 +41,7 @@ async def chat_endpoint(request: ChatRequest):
 
     contents = []
 
-    # 處理前端傳來的 Base64 圖片
+    # 處理 Base64 圖片資料
     if request.image:
         try:
             image_bytes = base64.b64decode(request.image)
@@ -59,19 +59,19 @@ async def chat_endpoint(request: ChatRequest):
     )
     contents.append(prompt)
 
-    # 以串流（Streaming）方式輸出 AI 回應內容
+    # 串流輸出 AI 回覆
     def stream_generator():
         try:
-            # 優先使用額度較寬裕且穩定的 1.5-flash 模型，避免頻繁觸發額度限制
+            # 使用 gemini-2.5-flash 模型
             response = client.models.generate_content_stream(
-                model="gemini-3.5-flash", contents=contents
+                model="gemini-2.5-flash", contents=contents
             )
             for chunk in response:
                 if chunk.text:
                     yield chunk.text
         except Exception as e:
             error_str = str(e)
-            # 擷取 429 或配額用盡錯誤，轉換為優雅的提示文字
+            # 自動攔截 429 或配額超限錯誤
             if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str:
                 yield "\n[今天額度用光了，明天才會刷回滿血 🔋]"
             else:
