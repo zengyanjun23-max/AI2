@@ -122,7 +122,7 @@ async function sendMessage() {
     const chatBox = document.getElementById("chatBox");
     if (!chatBox) return;
 
-    // 使用者訊息
+    // 使用者對話紀錄
     const userRow = document.createElement("div");
     userRow.className = "message-row user";
     
@@ -134,7 +134,7 @@ async function sendMessage() {
     userRow.innerHTML = userHtml;
     chatBox.appendChild(userRow);
 
-    // 清空輸入欄與圖片
+    // 清空輸入框
     input.value = "";
     const previewArea = document.getElementById("imagePreviewArea");
     if (previewArea) previewArea.innerHTML = "";
@@ -142,7 +142,7 @@ async function sendMessage() {
     const sendImg = currentBase64Image;
     currentBase64Image = null;
 
-    // AI 回應欄位
+    // AI 對話紀錄
     const aiRow = document.createElement("div");
     aiRow.className = "message-row ai";
     aiRow.innerHTML = `<div class="avatar ai-avatar">✦</div><div class="message-content" id="currentAiMsg"></div>`;
