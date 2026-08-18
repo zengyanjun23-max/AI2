@@ -3,53 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gemini AI Assistant</title>
+    <title>Gemini</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: #131314; color: #e3e3e3; display: flex; flex-direction: column; height: 100vh; }
-        
-        .chat-header { padding: 15px 20px; border-bottom: 1px solid #2d2f31; font-size: 18px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
-        .lang-select { background-color: #2b2c2e; color: #e3e3e3; border: 1px solid #3c4043; padding: 6px 12px; border-radius: 16px; font-size: 14px; outline: none; }
-        
-        .chat-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
-        .message { max-width: 80%; padding: 12px 16px; border-radius: 18px; line-height: 1.5; font-size: 15px; word-break: break-word; white-space: pre-wrap; }
-        .user-message { align-self: flex-end; background-color: #2b2c2e; color: #e3e3e3; border-bottom-right-radius: 4px; }
-        .ai-message { align-self: flex-start; background-color: transparent; color: #e3e3e3; border-bottom-left-radius: 4px; }
-        .preview-img { max-width: 200px; max-height: 200px; border-radius: 8px; margin-bottom: 8px; display: block; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Google Sans', -apple-system, BlinkMacSystemFont, sans-serif; }
+        body { background-color: #131314; color: #e3e3e3; display: flex; height: 100vh; overflow: hidden; }
 
-        .input-container { padding: 20px; background-color: #131314; display: flex; flex-direction: column; gap: 10px; align-items: center; }
-        .input-box { width: 100%; max-width: 800px; background-color: #1e1f20; border-radius: 28px; padding: 10px 16px; display: flex; align-items: center; gap: 10px; border: 1px solid #3c4043; }
-        .input-box textarea { flex: 1; background: transparent; border: none; outline: none; color: white; resize: none; height: 24px; font-size: 15px; }
+        /* 左側邊欄 Sidebar */
+        .sidebar { width: 260px; background-color: #1e1f20; padding: 16px; display: flex; flex-direction: column; gap: 16px; border-right: 1px solid #2d2f31; }
+        .new-chat-btn { background-color: #1a73e8; color: white; border: none; padding: 12px 16px; border-radius: 20px; cursor: pointer; font-weight: 500; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+        .new-chat-btn:hover { background-color: #1557b0; }
+        .sidebar-title { font-size: 12px; color: #8e918f; padding-left: 8px; font-weight: 600; text-transform: uppercase; }
+
+        /* 主聊天區 Main Area */
+        .main-chat { flex: 1; display: flex; flex-direction: column; background-color: #131314; }
+        .chat-header { padding: 16px 24px; border-bottom: 1px solid #2d2f31; font-size: 18px; font-weight: 500; display: flex; justify-content: space-between; align-items: center; }
+        .lang-select { background-color: #1e1f20; color: #e3e3e3; border: 1px solid #3c4043; padding: 6px 12px; border-radius: 16px; font-size: 13px; outline: none; cursor: pointer; }
         
-        .btn-icon { background: none; border: none; color: #c4c7c5; cursor: pointer; font-size: 18px; padding: 6px; border-radius: 50%; }
+        .chat-box { flex: 1; padding: 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 24px; }
+        .message-row { display: flex; gap: 16px; max-width: 800px; width: 100%; margin: 0 auto; }
+        .message-row.user { justify-content: flex-end; }
+        
+        .avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0; }
+        .ai-avatar { background: linear-gradient(135deg, #4285f4, #9b51e0); color: white; }
+        .user-avatar { background: #3c4043; color: white; }
+
+        .message-content { padding: 12px 18px; border-radius: 18px; line-height: 1.6; font-size: 15px; word-break: break-word; white-space: pre-wrap; }
+        .user .message-content { background-color: #2b2c2e; border-bottom-right-radius: 4px; }
+        .ai .message-content { background-color: transparent; border-bottom-left-radius: 4px; padding-left: 0; }
+        .preview-img { max-width: 240px; max-height: 240px; border-radius: 12px; margin-bottom: 8px; display: block; }
+
+        /* 下方輸入區域 Input Container */
+        .input-container { padding: 16px 24px 24px; display: flex; flex-direction: column; align-items: center; background-color: #131314; }
+        .input-wrapper { width: 100%; max-width: 800px; display: flex; flex-direction: column; gap: 8px; }
+        #imagePreviewArea { display: flex; gap: 10px; }
+        .thumb-preview { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; border: 1px solid #3c4043; }
+
+        .input-box { background-color: #1e1f20; border-radius: 28px; padding: 8px 16px; display: flex; align-items: center; gap: 12px; border: 1px solid #3c4043; }
+        .input-box:focus-within { border-color: #8e918f; }
+        .input-box textarea { flex: 1; background: transparent; border: none; outline: none; color: white; resize: none; height: 24px; font-size: 15px; max-height: 120px; }
+        
+        .btn-icon { background: none; border: none; color: #c4c7c5; cursor: pointer; font-size: 18px; padding: 8px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
         .btn-icon:hover { background-color: #2d2f31; color: white; }
-        .stop-btn { background-color: #d93025; color: white; border: none; padding: 6px 12px; border-radius: 16px; cursor: pointer; font-size: 13px; display: none; }
-        #imagePreviewArea { width: 100%; max-width: 800px; display: flex; gap: 10px; }
-        .thumb-preview { width: 60px; height: 60px; border-radius: 8px; object-fit: cover; }
+        .stop-btn { background-color: #d93025; color: white; border: none; padding: 6px 14px; border-radius: 16px; cursor: pointer; font-size: 13px; font-weight: 500; display: none; }
+        .send-btn { background-color: #e3e3e3; color: #131314; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-weight: bold; }
+        .send-btn:hover { background-color: #ffffff; }
     </style>
 </head>
 <body>
 
-    <div class="chat-header">
-        <span>Gemini AI Assistant</span>
-        <select id="languageSelect" class="lang-select">
-            <option value="Traditional Chinese">繁體中文</option>
-            <option value="English">English</option>
-            <option value="Japanese">日本語</option>
-        </select>
+    <div class="sidebar">
+        <button class="new-chat-btn" onclick="startNewChat()">✨ 新對話</button>
+        <div class="sidebar-title">Gemini Assistant</div>
     </div>
 
-    <div class="chat-box" id="chatBox"></div>
+    <div class="main-chat">
+        <div class="chat-header">
+            <span>Gemini</span>
+            <select id="languageSelect" class="lang-select">
+                <option value="Traditional Chinese">繁體中文</option>
+                <option value="English">English</option>
+                <option value="Japanese">日本語</option>
+            </select>
+        </div>
 
-    <div class="input-container">
-        <div id="imagePreviewArea"></div>
-        <div class="input-box">
-            <label class="btn-icon" title="上傳圖片">
-                📷 <input type="file" id="imageInput" accept="image/*" style="display: none;" onchange="handleImageSelect(event)">
-            </label>
-            <textarea id="userInput" placeholder="問問 Gemini... (Enter 發送，Shift+Enter 換行)" rows="1" onkeydown="handleKeyDown(event)"></textarea>
-            <button class="stop-btn" id="stopBtn" onclick="stopGeneration()">停止生成</button>
-            <button class="btn-icon" id="sendBtn" onclick="sendMessage()">➔</button>
+        <div class="chat-box" id="chatBox"></div>
+
+        <div class="input-container">
+            <div class="input-wrapper">
+                <div id="imagePreviewArea"></div>
+                <div class="input-box">
+                    <label class="btn-icon" title="上傳圖片">
+                        📷 <input type="file" id="imageInput" accept="image/*" style="display: none;" onchange="handleImageSelect(event)">
+                    </label>
+                    <textarea id="userInput" placeholder="輸入提示詞或問題 (Enter 發送，Shift+Enter 換行)" rows="1" onkeydown="handleKeyDown(event)"></textarea>
+                    <button class="stop-btn" id="stopBtn" onclick="stopGeneration()">停止</button>
+                    <button class="send-btn" id="sendBtn" onclick="sendMessage()">➔</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -57,7 +87,6 @@
 let abortController = null;
 let currentBase64Image = null;
 
-// Enter 鍵處理：按下 Enter 直接發送，Shift + Enter 換行
 function handleKeyDown(e) {
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
@@ -65,7 +94,6 @@ function handleKeyDown(e) {
     }
 }
 
-// 選擇圖片並顯示縮圖
 function handleImageSelect(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -81,7 +109,6 @@ function handleImageSelect(e) {
     reader.readAsDataURL(file);
 }
 
-// 發送訊息
 async function sendMessage() {
     const input = document.getElementById("userInput");
     if (!input) return;
@@ -95,16 +122,19 @@ async function sendMessage() {
     const chatBox = document.getElementById("chatBox");
     if (!chatBox) return;
 
-    // 建立使用者訊息框
-    const userDiv = document.createElement("div");
-    userDiv.className = "message user-message";
+    // 使用者訊息
+    const userRow = document.createElement("div");
+    userRow.className = "message-row user";
+    
+    let userHtml = `<div class="message-content">`;
     if (currentBase64Image) {
-        userDiv.innerHTML += `<img src="${currentBase64Image}" class="preview-img"><br>`;
+        userHtml += `<img src="${currentBase64Image}" class="preview-img">`;
     }
-    userDiv.innerHTML += text;
-    chatBox.appendChild(userDiv);
+    userHtml += `${text}</div><div class="avatar user-avatar">你</div>`;
+    userRow.innerHTML = userHtml;
+    chatBox.appendChild(userRow);
 
-    // 清空輸入框與預覽圖
+    // 清空輸入欄與圖片
     input.value = "";
     const previewArea = document.getElementById("imagePreviewArea");
     if (previewArea) previewArea.innerHTML = "";
@@ -112,13 +142,15 @@ async function sendMessage() {
     const sendImg = currentBase64Image;
     currentBase64Image = null;
 
-    // 建立 AI 訊息框
-    const aiDiv = document.createElement("div");
-    aiDiv.className = "message ai-message";
-    aiDiv.innerText = "";
-    chatBox.appendChild(aiDiv);
+    // AI 回應欄位
+    const aiRow = document.createElement("div");
+    aiRow.className = "message-row ai";
+    aiRow.innerHTML = `<div class="avatar ai-avatar">✦</div><div class="message-content" id="currentAiMsg"></div>`;
+    chatBox.appendChild(aiRow);
 
-    // 控制按鈕顯示（顯示停止生成）
+    const aiMsgDiv = aiRow.querySelector("#currentAiMsg");
+    chatBox.scrollTop = chatBox.scrollHeight;
+
     const stopBtn = document.getElementById("stopBtn");
     const sendBtn = document.getElementById("sendBtn");
     if (stopBtn) stopBtn.style.display = "inline-block";
@@ -138,7 +170,7 @@ async function sendMessage() {
             })
         });
 
-        if (!response.ok) throw new Error("Server status: " + response.status);
+        if (!response.ok) throw new Error("Server error: " + response.status);
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder("utf-8");
@@ -146,27 +178,32 @@ async function sendMessage() {
         while (true) {
             const { done, value } = await reader.read();
             if (done) break;
-            aiDiv.innerText += decoder.decode(value, { stream: true });
+            aiMsgDiv.innerText += decoder.decode(value, { stream: true });
             chatBox.scrollTop = chatBox.scrollHeight;
         }
 
     } catch (err) {
         if (err.name === 'AbortError') {
-            aiDiv.innerText += " [已停止生成]";
+            aiMsgDiv.innerText += " [已停止生成]";
         } else {
-            aiDiv.innerText = "連線失敗，請檢查網路或 Render 後端。";
+            aiMsgDiv.innerText = "連線失敗，請檢查 Render 後端狀態。";
             console.error(err);
         }
     } finally {
         if (stopBtn) stopBtn.style.display = "none";
-        if (sendBtn) sendBtn.style.display = "inline-block";
+        if (sendBtn) sendBtn.style.display = "flex";
+        aiMsgDiv.removeAttribute("id");
         chatBox.scrollTop = chatBox.scrollHeight;
     }
 }
 
-// 停止生成功能
 function stopGeneration() {
     if (abortController) abortController.abort();
+}
+
+function startNewChat() {
+    const chatBox = document.getElementById("chatBox");
+    if (chatBox) chatBox.innerHTML = "";
 }
 </script>
 </body>
