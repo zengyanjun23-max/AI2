@@ -7,40 +7,31 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #131314; color: #e3e3e3; display: flex; height: 100vh; overflow: hidden; }
-        
-        /* 側邊欄 */
         .sidebar { width: 260px; background-color: #1e1f20; padding: 20px; display: flex; flex-direction: column; gap: 15px; border-right: 1px solid #2d2f31; }
-        .new-chat-btn { background-color: #1a73e8; color: white; border: none; padding: 12px; border-radius: 20px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .new-chat-btn:hover { background-color: #1557b0; }
+        .new-chat-btn { background-color: #1a73e8; color: white; border: none; padding: 12px; border-radius: 20px; cursor: pointer; font-weight: bold; }
         .history-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
-        .history-item { padding: 10px; border-radius: 8px; cursor: pointer; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #c4c7c5; }
+        .history-item { padding: 10px; border-radius: 8px; cursor: pointer; font-size: 14px; color: #c4c7c5; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .history-item:hover { background-color: #2d2f31; }
 
-        /* 主對話區 */
-        .main-chat { flex: 1; display: flex; flex-direction: column; justify-content: space-between; position: relative; }
-        .chat-header { padding: 15px 20px; border-bottom: 1px solid #2d2f31; font-size: 18px; font-weight: bold; color: #e3e3e3; display: flex; justify-content: space-between; align-items: center; }
+        .main-chat { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        .chat-header { padding: 15px 20px; border-bottom: 1px solid #2d2f31; font-size: 18px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .lang-select { background-color: #2b2c2e; color: #e3e3e3; border: 1px solid #3c4043; padding: 6px 12px; border-radius: 16px; font-size: 14px; outline: none; }
         
-        .lang-select { background-color: #2b2c2e; color: #e3e3e3; border: 1px solid #3c4043; padding: 6px 12px; border-radius: 16px; outline: none; font-size: 14px; cursor: pointer; }
-        .lang-select:hover { background-color: #3c4043; }
-
         .chat-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
-        
         .message { max-width: 80%; padding: 12px 16px; border-radius: 18px; line-height: 1.5; font-size: 15px; word-break: break-word; white-space: pre-wrap; }
         .user-message { align-self: flex-end; background-color: #2b2c2e; color: #e3e3e3; border-bottom-right-radius: 4px; }
         .ai-message { align-self: flex-start; background-color: transparent; color: #e3e3e3; border-bottom-left-radius: 4px; }
         .preview-img { max-width: 200px; max-height: 200px; border-radius: 8px; margin-bottom: 8px; display: block; }
 
-        /* 輸入區域 */
         .input-container { padding: 20px; background-color: #131314; display: flex; flex-direction: column; gap: 10px; align-items: center; }
         .input-box { width: 100%; max-width: 800px; background-color: #1e1f20; border-radius: 28px; padding: 10px 16px; display: flex; align-items: center; gap: 10px; border: 1px solid #3c4043; }
-        .input-box textarea { flex: 1; background: transparent; border: none; outline: none; color: white; resize: none; height: 24px; font-size: 15px; max-height: 120px; }
+        .input-box textarea { flex: 1; background: transparent; border: none; outline: none; color: white; resize: none; height: 24px; font-size: 15px; }
         
-        .btn-icon { background: none; border: none; color: #c4c7c5; cursor: pointer; font-size: 18px; padding: 6px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .btn-icon { background: none; border: none; color: #c4c7c5; cursor: pointer; font-size: 18px; padding: 6px; border-radius: 50%; }
         .btn-icon:hover { background-color: #2d2f31; color: white; }
         .stop-btn { background-color: #d93025; color: white; border: none; padding: 6px 12px; border-radius: 16px; cursor: pointer; font-size: 13px; display: none; }
-
         #imagePreviewArea { width: 100%; max-width: 800px; display: flex; gap: 10px; }
-        .thumb-preview { width: 60px; height: 60px; border-radius: 8px; object-fit: cover; position: relative; }
+        .thumb-preview { width: 60px; height: 60px; border-radius: 8px; object-fit: cover; }
     </style>
 </head>
 <body>
@@ -94,9 +85,7 @@ function handleImageSelect(e) {
     const reader = new FileReader();
     reader.onload = (event) => {
         currentBase64Image = event.target.result;
-        document.getElementById("imagePreviewArea").innerHTML = `
-            <img src="${currentBase64Image}" class="thumb-preview">
-        `;
+        document.getElementById("imagePreviewArea").innerHTML = `<img src="${currentBase64Image}" class="thumb-preview">`;
     };
     reader.readAsDataURL(file);
 }
@@ -110,7 +99,6 @@ async function sendMessage() {
 
     const chatBox = document.getElementById("chatBox");
 
-    // 渲染 User 訊息
     const userDiv = document.createElement("div");
     userDiv.className = "message user-message";
     if (currentBase64Image) {
@@ -119,23 +107,19 @@ async function sendMessage() {
     userDiv.innerHTML += text;
     chatBox.appendChild(userDiv);
 
-    // 清空輸入
     input.value = "";
     document.getElementById("imagePreviewArea").innerHTML = "";
     const sendImg = currentBase64Image;
     currentBase64Image = null;
 
-    // 建立 AI 訊息框
     const aiDiv = document.createElement("div");
     aiDiv.className = "message ai-message";
-    aiDiv.innerText = "▌";
+    aiDiv.innerText = "思考中...";
     chatBox.appendChild(aiDiv);
     chatBox.scrollTop = chatBox.scrollHeight;
 
-    const stopBtn = document.getElementById("stopBtn");
-    const sendBtn = document.getElementById("sendBtn");
-    stopBtn.style.display = "inline-block";
-    sendBtn.style.display = "none";
+    document.getElementById("stopBtn").style.display = "inline-block";
+    document.getElementById("sendBtn").style.display = "none";
 
     abortController = new AbortController();
 
@@ -151,18 +135,18 @@ async function sendMessage() {
             })
         });
 
-        if (!response.ok) throw new Error("HTTP Status: " + response.status);
+        if (!response.ok) throw new Error("Server response status: " + response.status);
 
         const reader = response.body.getReader();
-        const decoder = new TextDecoder("utf-8");
-        aiDiv.innerText = "";
+        const decoder = new TextDecoder();
+        aiDiv.innerText = ""; // 清空載入文字
 
         while (true) {
             const { done, value } = await reader.read();
             if (done) break;
 
-            const chunk = decoder.decode(value, { stream: true });
-            aiDiv.innerText += chunk;
+            const textChunk = decoder.decode(value, { stream: true });
+            aiDiv.innerText += textChunk;
             chatBox.scrollTop = chatBox.scrollHeight;
         }
 
@@ -170,22 +154,20 @@ async function sendMessage() {
 
     } catch (err) {
         if (err.name === 'AbortError') {
-            aiDiv.innerText += " [已停止]";
+            aiDiv.innerText += " [已停止生成]";
         } else {
-            aiDiv.innerText = "連線失敗，請稍後再試。";
+            aiDiv.innerText = "連線失敗，請檢查 Render Log 或稍後再試。";
             console.error(err);
         }
     } finally {
-        stopBtn.style.display = "none";
-        sendBtn.style.display = "inline-block";
+        document.getElementById("stopBtn").style.display = "none";
+        document.getElementById("sendBtn").style.display = "inline-block";
         chatBox.scrollTop = chatBox.scrollHeight;
     }
 }
 
 function stopGeneration() {
-    if (abortController) {
-        abortController.abort();
-    }
+    if (abortController) abortController.abort();
 }
 
 function startNewChat() {
