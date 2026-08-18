@@ -29,7 +29,7 @@ async def chat_endpoint(request: ChatRequest):
   try:
     client = Groq(api_key=api_key)
     completion = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
+        model="llama3-70b-8192",  # 改用這個最穩定的模型名稱
         messages=[
             {
                 "role": "system",
