@@ -64,6 +64,7 @@
             background-color: #e9ecef;
             color: #212529;
             border-bottom-left-radius: 4px;
+            min-width: 60px;
         }
         .input-container {
             display: flex;
@@ -126,7 +127,7 @@
             inputField.value = "";
             chatBox.scrollTop = chatBox.scrollHeight;
 
-            // 2. 顯示 AI 思考中的暫時訊息
+            // 2. 建立 AI 對話框並顯示思考中
             const aiMsgDiv = document.createElement("div");
             aiMsgDiv.className = "message ai";
             aiMsgDiv.textContent = "思考中...";
@@ -134,8 +135,7 @@
             chatBox.scrollTop = chatBox.scrollHeight;
 
             try {
-                // 【注意】完成第二階段 Render 部署後，請將下方網址替換為你在 Render 取得的後端網址
-                // 例如: https://ai2-9ewx.onrender.com
+                // 已設定為你的 Render API 網址
                 const backendUrl = "https://ai2-9ewx.onrender.com/api/chat";
 
                 const response = await fetch(backendUrl, {
@@ -144,10 +144,20 @@
                     body: JSON.stringify({ message: message })
                 });
 
+                if (!response.ok) {
+                    throw new Error(`HTTP 錯誤碼：${response.status}`);
+                }
+
                 const data = await response.json();
-                aiMsgDiv.textContent = data.reply;
+
+                // 3. 確保文字正確渲染至畫面上
+                if (data && data.reply) {
+                    aiMsgDiv.textContent = data.reply;
+                } else {
+                    aiMsgDiv.textContent = "收到空回應，請確認資料結構。";
+                }
             } catch (error) {
-                aiMsgDiv.textContent = "連線失敗，請確認後端 API 伺服器是否正常運行。";
+                aiMsgDiv.textContent = "連線失敗，可能是伺服器正在喚醒中，請於 30 秒後重試。";
             }
             chatBox.scrollTop = chatBox.scrollHeight;
         }
